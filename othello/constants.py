@@ -15,10 +15,13 @@ SQUARE_SIZE = (SCREEN_WIDTH//COLUMNS)
 # --- pieces (in rgb) ----
 BLACK = (0,0,0)
 WHITE = (255,255,255)
+GREY = (128,128,128)
+
 
 # --- indicator (shows availible moves) ----
 BLUE = (0,0,255) #indicates availible moves for the player
-CUBE_COLOR = (200, 0, 0)
+RED = (255,0,0) # indicates the last played move
+
 
 # --- board color ---
 BACKGROUND_COLOR = (223, 208, 192)

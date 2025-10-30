@@ -31,13 +31,12 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN: # place the piece down
                 pass
             
-        board.draw_squares(SCREEN)
+        board.draw(SCREEN)
         pygame.display.update() ## update the screen after each loop
         
     pygame.quit() # gets rid of the window
         
 
-        
 main() # Create the window
 
             
