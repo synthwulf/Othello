@@ -9,7 +9,7 @@ SCREEN_HEIGHT = 800
 # --- board dimensions
 ROWS = 8
 COLUMNS  = 8
-SQUARE_SIZE = (SCREEN_WIDTH//COLUMNS)
+SQUARE_SIZE = SCREEN_WIDTH // COLUMNS
 
 
 # --- pieces (in rgb) ----

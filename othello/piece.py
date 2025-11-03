@@ -1,5 +1,5 @@
 import pygame
-from .constants import GREY, SQUARE_SIZE
+from .constants import GREY, SQUARE_SIZE, BLACK, WHITE
 
 class Piece:
     
@@ -15,17 +15,19 @@ class Piece:
         self.calculatePosition()
         
     def calculatePosition(self):
-        self.x = SQUARE_SIZE * self.column + SQUARE_SIZE // 2 # 
-        self.y = SQUARE_SIZE * self.row + SQUARE_SIZE // 2
+        self.x = SQUARE_SIZE * self.row + SQUARE_SIZE // 2 # 
+        self.y = SQUARE_SIZE * self.column + SQUARE_SIZE // 2
         
-        
-    def draw(self, screen):
+    def draw(self, screen): # driws itself on the screen
         radius = SQUARE_SIZE//2 - self.PADDING
         pygame.draw.circle(screen, GREY,(self.x, self.y), radius + self.OUTLINE)
         pygame.draw.circle(screen, self.color,(self.x, self.y), radius)
 
-    def changeColor(self, other): # a piece can change color if it is outflanked
-        self.color = other
+    def changeColor(self): # a piece can change color if it is outflanked
+        if self.color == BLACK:
+            self.color = WHITE
+        elif self.color == WHITE:
+            self.color = BLACK
         
     def __repr__(self): # avoids printing the actual object refrence name
         return str(self.color)
