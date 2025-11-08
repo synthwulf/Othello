@@ -138,6 +138,21 @@ class Board:
             steps = self.move(val, rows, columns, color)
             if steps:   
                 self.flipPieces(val, steps, rows, columns)
+                
+    def evaluate(self): # returns a value that will be used by minimax
+                        # corner pieces are perfered
+        return self.black - self.white 
+    
+    def winner(self):
+        if (self.white + self.black == 64):
+            if self.white > self.black:
+                return self.white
+            elif self.white < self.black:
+                return self.black
+            else:
+                return 0
+        else:
+            return False
 
     def  updateScore(self):
         self.black = 0

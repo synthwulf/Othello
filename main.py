@@ -10,6 +10,7 @@ import os
 import pygame
 from othello.constants import SCREEN_HEIGHT, SCREEN_WIDTH, BLACK, WHITE, SQUARE_SIZE #import the constants defined in othello/constants.py
 from othello.board import Board
+from minimax import minimax_algorithm
 
 FPS = 60 # <----  could put this in constants folder but the constants file is specific to the game
 
@@ -31,15 +32,14 @@ def handleClick(board, row, column, color, valid_moves):
 
 def printScores(board): ## debugging
     board.updateScore()
-    totalPieces = board.black + board.white
-    if totalPieces == 64:
-        if board.black > board.white:
-            print("BLACK WINS!!!!")
+    if board.winner():
+        if board.winner() != 0:
+            print(f"{"WHITE" if board.winner() == board.white else "BLACK"} WINS!!!")
             print()
             print("############### FINAL SCORE #############")
             print(f"Black Score: {board.black} White Score: {board.white}")
         else:
-            print("WHITE WINS!!!!")
+            print(" DRAW :( ")
             print()
             print("############### FINAL SCORE #############")
             print(f"Black Score: {board.black} White Score: {board.white}")
@@ -77,7 +77,7 @@ def main():
     clock = pygame.time.Clock() # makes the game run at maximum a machine can handle 
     board = Board()
     
-    minimax = False
+    ai_enable = False
     current_color = BLACK
     running = True
     
@@ -111,7 +111,7 @@ def main():
                             
                     printScores(board) # Display the score to the screen
                     
-                elif not minimax and current_color == WHITE:
+                elif not ai_enable and current_color == WHITE:
                     valid_moves = getValidMoves(board, WHITE)
                     if board.pieceInSpot(row, column) != True:
                         state = handleClick(board, row, column, WHITE, valid_moves)
@@ -126,18 +126,20 @@ def main():
                     
                     printScores(board) # Display the score to the screen
                     
-                elif minimax and current_color == WHITE:
+                elif ai_enable and current_color == WHITE:
+                    
+                    ##TODO: implement minimax
                     pass
                     
-                ### ------------------- Keyboard Input --------------------------
-            elif event.type == pygame.KEYDOWN and not minimax:
+            ### ------------------- keyboard input for AI --------------------------
+            elif event.type == pygame.KEYDOWN and not ai_enable:
                 if event.key == pygame.K_SPACE:
-                    minimax = True
+                    ai_enable = True
                     print("AI ON")
             
-            elif event.type == pygame.KEYDOWN and minimax:
+            elif event.type == pygame.KEYDOWN and ai_enable:
                 if event.key == pygame.K_SPACE:
-                    minimax = False
+                    ai_enable = False
                     print("AI OFF")
                     
 
@@ -153,11 +155,12 @@ def main():
         )
         white_score = font.render( f"WHITE SCORE: {Bscore}",True,(0,0,200))
         black_score = font.render( f"BLACK SCORE: {Wscore}",True,(0,0,200))
-        ai_toggle = font.render( f"MINIMAX: {minimax}",True,(0,200,0))
+        ai_on_display = font.render( f"MINIMAX: {ai_enable}",True,(0,200,0))
+        
         SCREEN.blit(turn_text, (20, 20)) #display the turn
         SCREEN.blit(black_score, (20,750))
         SCREEN.blit(white_score, (550, 750))
-        SCREEN.blit(ai_toggle, (550, 20))
+        SCREEN.blit(ai_on_display, (550, 20))
         
         pygame.display.update() ## update the screen after each loop
         
