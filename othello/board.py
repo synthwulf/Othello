@@ -2,11 +2,25 @@ import pygame
 from .constants import *
 from .piece import Piece
 
+
+#current weights of the board
+#corner pieces are more favored thus the higher weight value
+WEIGHTS = [
+    [120, -20,  20,  5,  5,  20, -20, 120],
+    [-20, -40,  -5, -5, -5,  -5, -40, -20],
+    [ 20,  -5,  15,  3,  3,  15,  -5,  20],
+    [  5,  -5,   3,  1,  1,   3,  -5,   5],
+    [  5,  -5,   3,  1,  1,   3,  -5,   5],
+    [ 20,  -5,  15,  3,  3,  15,  -5,  20],
+    [-20, -40,  -5, -5, -5,  -5, -40, -20],
+    [120, -20,  20,  5,  5,  20, -20, 120]
+]
+
 class Board:
     def __init__(self):
         self.board = []
-        self.black = 2
-        self.white = 2
+        self.black = 2 # value starts at 2 to follow the inital board state
+        self.white = 2 # value starts at 2 to follow the inital board state
         self.curColor = BLACK
         self.last_move = None
         self.createBoard()
@@ -18,7 +32,7 @@ class Board:
                 rect = pygame.Rect(col*SQUARE_SIZE, row*SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE)
                 pygame.draw.rect(screen, BLACK, rect, 1)
 
-    def createBoard(self):
+    def createBoard(self): # create the initial board with the initial pieces on the board
         for row in range(ROWS):
             self.board.append([])  
             for column in range(COLUMNS):
@@ -33,9 +47,8 @@ class Board:
                 else:
                     self.board[row].append(0)
                     
-    def pieceInSpot(self, row, column):
+    def pieceInSpot(self, row, column): # checks to see if there is a piece in a spot the player or AI is trying to play in.
         return isinstance(self.board[row][column], Piece)
-    
     
     def draw(self, screen):
         self.drawSquares(screen)
@@ -45,7 +58,7 @@ class Board:
                 if piece != 0:
                     piece.draw(screen)
                     
-    def placePiece(self, row, column, color):
+    def placePiece(self, row, column, color): #places the piece at the specified location
         piece = Piece(row, column, color)
         if self.board[row][column] == 0:
             self.board[row][column] = piece
@@ -56,7 +69,7 @@ class Board:
                 self.white += 1
 
     def flipPieces(self, direction, steps, rows, columns):
-        dy, dx = direction ## get the value of the directino
+        dy, dx = direction ## get the value of the direction
         r, c = rows + dy, columns + dx #r and c represent the
         for _ in range(steps):
             piece = self.board[r][c]
@@ -126,6 +139,12 @@ class Board:
         return 0 
 
     def findFlanker(self, rows, columns, color):
+        ###### these can be seen as direction vectors which modified the current spot as (row, column)
+        ###### + row -> down 
+        ###### - row -> up
+        ###### + column -> right
+        ###### + column -> left
+    
         directions = {
             "up": (-1, 0),
             "down": (1, 0),
@@ -143,21 +162,58 @@ class Board:
                 
     def evaluate(self): # returns a value that will be used by minimax
                         # corner pieces are perfered
-        return self.white - self.black
+        ## weights below can be seen at the amount of importance of a particular action based on the board state
+        ## this will be mostly used for the minimax function
+        WEIGHT_PIECE = 1.0
+        WEIGHT_POS = 4.0
+        WEIGHT_MOBILITY = 3.0 
+        
+        white_pos, black_pos = self.get_piece_score()
+        pos_score = (white_pos - black_pos) * WEIGHT_POS
+        mob_score = self.get_mobility_score() * WEIGHT_MOBILITY
+        piece_score = (self.white - self.black) * WEIGHT_PIECE
+        
+        final_score = pos_score + mob_score + piece_score
+        
+        return final_score
     
-    def winner(self):
+    def get_piece_score(self): ## the amount of availible moves by 
+        white_weighted_score = 0
+        black_weighted_score = 0
+        for r in range(ROWS):
+            for c in range(COLUMNS):
+                piece = self.board[r][c]
+                if piece != 0:
+                    weight = WEIGHTS[r][c]
+                    if piece.color == WHITE:
+                        white_weighted_score += weight
+                    elif piece.color == BLACK:
+                        black_weighted_score += weight
+                    
+        return white_weighted_score, black_weighted_score
+        
+    
+    def get_mobility_score(self): # get how many available spots the current player has to play and return a heuristic value for that
+        black_moves = self.checkAvailible(BLACK)
+        white_moves = self.checkAvailible(WHITE)
+        
+        return len(white_moves) - len(black_moves)
+    
+    def winner(self): ## returns the current state of the game in the context of winning 
+                        # or losing based on who has more pieces
+                        # reutrns False if there is no winner
         self.updateScore()
         if (self.white + self.black == 64):
             if self.white > self.black:
-                return self.white
+                return WHITE
             elif self.white < self.black:
-                return self.black
+                return BLACK
             else:
                 return 0
         else:
             return False
 
-    def updateScore(self):
+    def updateScore(self): 
         self.black = 0
         self.white = 0
         for row in self.board:

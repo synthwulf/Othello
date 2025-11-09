@@ -1,13 +1,14 @@
 import pygame
-from copy import deepcopy ## allows us to copy the board multiple times
+from copy import deepcopy ## allows us to copy the current boatd state
 from othello.constants import WHITE, BLACK
 
-def minimax(state, depth, max_player):
-    if depth == 0 or state.winner() is not False:           
+def minimax(state, depth, max_player, alpha, beta):
+    if depth == 0 or state.winner() is not False:  
         return state.evaluate(), None
     
     current_minimax_color = WHITE if max_player else BLACK
     valid_moves = actions(state, current_minimax_color)
+    
     if not valid_moves:
         return state.evaluate(), None
 
@@ -16,10 +17,12 @@ def minimax(state, depth, max_player):
         best_move = None
         for action in valid_moves:
             new_state = result(state, action)
-            eval_value, _ = minimax(new_state, depth - 1, False)
-            if eval_value > max_eval:
-                max_eval = eval_value
-                best_move = (action[0], action[1])
+            eval_value, _ = minimax(new_state, depth - 1, False, alpha, beta)
+            max_eval = max(alpha, eval_value)
+            alpha = max(alpha, eval_value)
+            if beta <= alpha:
+                break
+        best_move = (action[0], action[1])
         return max_eval, best_move
 
     else:
@@ -27,10 +30,12 @@ def minimax(state, depth, max_player):
         best_move = None
         for action in valid_moves:
             new_state = result(state, action)
-            eval_value, _ = minimax(new_state, depth - 1, True)
-            if eval_value < min_eval:
-                min_eval = eval_value
-                best_move = (action[0], action[1])
+            eval_value, _ = minimax(new_state, depth - 1, True, alpha, beta)
+            min_eval = min(min_eval, eval_value)
+            beta = min(beta, eval_value)
+            if beta <= alpha:
+                break
+        best_move = (action[0], action[1])
         return min_eval, best_move
 
 def result(state, action): # resulting state from taking action a in state s

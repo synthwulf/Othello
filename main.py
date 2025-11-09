@@ -20,27 +20,29 @@ pygame.display.set_caption('Othello')
 
 #### -------------------- Helper Functions -------------------------
 
-def handleClick(board, row, column, color, valid_moves=False):
+def handleClick(board, row, column, color, valid_moves): ## returns a boolean value telling us wether or not there are valid moves. 
+                                                                # 0 if there are valid moves but none were chosen
     print(valid_moves)
     if (row, column) in valid_moves: ## if the (row, column) is in the list then the piece can be played
         board.placePiece(row, column, color)
         board.findFlanker(row, column, color)
         return True
+    elif valid_moves == []:
+        print("no moves nigger but im not going to skip")
+        return []
     elif valid_moves:
-        return  0 # holds the state
-    else:
-        return False
-
+        return  0 # holds the can_move
+    #TODO: if there are no valid moves for black then change the turn. Only should be True if valid_moves == []
 def printScores(board): ## debugging
     board.updateScore()
-    if board.winner():
+    if board.winner() != False:
         if board.winner() != 0:
-            print(f"{"WHITE" if board.winner() == board.white else "BLACK"} WINS!!!")
+            print(f"{"WHITE" if board.winner() == WHITE else "BLACK"} WINS!!!")
             print()
             print("############### FINAL SCORE #############")
             print(f"Black Score: {board.black} White Score: {board.white}")
         else:
-            print(" DRAW :( ")
+            print(" DRAW :( ") # if the 
             print()
             print("############### FINAL SCORE #############")
             print(f"Black Score: {board.black} White Score: {board.white}")
@@ -100,37 +102,35 @@ def main():
                 if current_color == BLACK:
                     valid_moves = getValidMoves(board, BLACK)
                     if board.pieceInSpot(row, column) != True:
-                        state = handleClick(board, row, column, BLACK, valid_moves)
-                        if state:
+                        can_move = handleClick(board, row, column, BLACK, valid_moves)
+                        if can_move:
                             current_color = switchTurn(BLACK) # change turns
-                        elif state == 0:
+                        elif can_move == 0:
                             print("Invalid Spot")
                             continue
-                        else:
+                        elif can_move == []:  ## if there are no valid moves in the first place for black then just skip turn
                             current_color = switchTurn(BLACK) # change turns anyway
-                            print("No Availible Turns. Switching Turns")
-                            
-                    printScores(board) # Display the score to the screen
+                            print("No Availible Turns for player. Switching Turns")
+                        printScores(board) # Display the score to the screen
                     
                 elif not ai_enable and current_color == WHITE:
                     valid_moves = getValidMoves(board, WHITE)
                     if board.pieceInSpot(row, column) != True:
-                        state = handleClick(board, row, column, WHITE, valid_moves)
-                        if state:
+                        can_move = handleClick(board, row, column, WHITE, valid_moves)
+                        if can_move:
                             current_color = switchTurn(WHITE) # change turns
-                        elif state == 0:
+                        elif can_move == 0:
                             print("Invalid Spot")
                             continue
                         else:
                             current_color = switchTurn(WHITE) # change turns anyway
                             print("No Availible moves. Switching Turns")
-                    
-                    printScores(board) # Display the score to the screen
+                        printScores(board) # Display the score to the screen
                     
                 elif ai_enable and current_color == WHITE:
                     ##TODO: implement minimax
-                    board.curColor == WHITE
-                    value, best_move = minimax_algorithm.minimax(board, 5, True)
+                    board.curColor = WHITE
+                    value, best_move = minimax_algorithm.minimax(board, 3, True, float('-inf'), float('inf'))
                     if best_move:
                         r, c = best_move
                         board.placePiece(r, c, WHITE)
@@ -165,8 +165,8 @@ def main():
         turn_text = font.render(
         f"{'Black' if current_color == BLACK else 'White'}'s Turn ", True, (0, 100, 255)
         )
-        white_score = font.render( f"WHITE SCORE: {Bscore}",True,(0,0,200))
-        black_score = font.render( f"BLACK SCORE: {Wscore}",True,(0,0,200))
+        white_score = font.render( f"WHITE SCORE: {Wscore}",True,(0,0,200))
+        black_score = font.render( f"BLACK SCORE: {Bscore}",True,(0,0,200))
         ai_on_display = font.render( f"MINIMAX: {ai_enable}",True,(0,200,0))
         
         SCREEN.blit(turn_text, (20, 20)) #display the turn
