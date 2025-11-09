@@ -20,7 +20,8 @@ pygame.display.set_caption('Othello')
 
 #### -------------------- Helper Functions -------------------------
 
-def handleClick(board, row, column, color, valid_moves):
+def handleClick(board, row, column, color, valid_moves=False):
+    print(valid_moves)
     if (row, column) in valid_moves: ## if the (row, column) is in the list then the piece can be played
         board.placePiece(row, column, color)
         board.findFlanker(row, column, color)
@@ -48,7 +49,7 @@ def printScores(board): ## debugging
     
 def switchTurn(current_color): # changes turns
     
-    os.system('cls')
+    # os.system('cls')
     
     curTurn =  WHITE if current_color == BLACK else BLACK
     
@@ -127,9 +128,20 @@ def main():
                     printScores(board) # Display the score to the screen
                     
                 elif ai_enable and current_color == WHITE:
-                    
                     ##TODO: implement minimax
-                    pass
+                    board.curColor == WHITE
+                    value, best_move = minimax_algorithm.minimax(board, 5, True)
+                    if best_move:
+                        r, c = best_move
+                        board.placePiece(r, c, WHITE)
+                        board.findFlanker(r, c,WHITE)
+                        current_color = switchTurn(WHITE)
+                        print(f"placed a {(r, c)} (eval={value})")
+                    else:
+                        current_color = switchTurn(WHITE)
+                        print("AI has no valid moves. Switching turns.")
+                    printScores(board)
+
                     
             ### ------------------- keyboard input for AI --------------------------
             elif event.type == pygame.KEYDOWN and not ai_enable:

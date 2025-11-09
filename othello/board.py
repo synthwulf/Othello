@@ -7,6 +7,8 @@ class Board:
         self.board = []
         self.black = 2
         self.white = 2
+        self.curColor = BLACK
+        self.last_move = None
         self.createBoard()
     
     def drawSquares(self, screen):
@@ -47,13 +49,13 @@ class Board:
         piece = Piece(row, column, color)
         if self.board[row][column] == 0:
             self.board[row][column] = piece
+            self.last_move = (row, column)
             if color == BLACK: 
                 self.black += 1
             elif color == WHITE:
                 self.white += 1
 
     def flipPieces(self, direction, steps, rows, columns):
-        
         dy, dx = direction ## get the value of the directino
         r, c = rows + dy, columns + dx #r and c represent the
         for _ in range(steps):
@@ -91,8 +93,8 @@ class Board:
                     steps = self.move((dy, dx), row, column, color)
                     if steps > 0:
                         valid_moves.append((row, column))
-                        break
-                            
+                        # break
+                        
         return valid_moves if valid_moves else False
     
     def checkAvailible(self, color):
@@ -141,9 +143,10 @@ class Board:
                 
     def evaluate(self): # returns a value that will be used by minimax
                         # corner pieces are perfered
-        return self.black - self.white 
+        return self.white - self.black
     
     def winner(self):
+        self.updateScore()
         if (self.white + self.black == 64):
             if self.white > self.black:
                 return self.white
@@ -154,7 +157,7 @@ class Board:
         else:
             return False
 
-    def  updateScore(self):
+    def updateScore(self):
         self.black = 0
         self.white = 0
         for row in self.board:
