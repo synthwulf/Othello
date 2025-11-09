@@ -1,10 +1,41 @@
 # Name: Ryan Anderson
-# Date: 10/30/2025
-# Desc: This programs implements the game othello using pygame 
+# Date: 11/9/2025
+# Desc: This programs implements the game 'othello' using the python library pygame
+#       A player can place down pieces to outflank their opponent to increase their score 
+#       A player can win if they have more pieces of their color than the opponents color
+#       A player will ALWAYS have the chance to move IF they have availible move.
+#       If a player does not have availible moves then their turn is skipped
+#       
+#       Black []
+#       White [[]]
+#
+#
+#       Ex.)        
+#           black score: 2
+#           white score: 1
+
+#   ---->   [] [[]] [] 
+#
+#           becomes....
+#
+#
+#           black score: 3
+#           white score: 0
+#           
+#   ---->   [] [] []
+#           
+
+#           
+#
 #
 # sources to create this project: 
 #   https://www.petercollingridge.co.uk/tutorials/pygame-physics-simulation/creating-pygame-window
+#   https://www.geeksforgeeks.org/artificial-intelligence/mini-max-algorithm-in-artificial-intelligence
 #
+#   ## SPACE - to turn MINIMAX ON/TOGGLE
+#   ## 0     - to turn ALPHA-BETA PRUNING 
+#   ## if MINIMAX is ON then to prorgess to the other players move just left-click and the program will 
+#   ### cycle through all possibilities of a given game state and will chose the best move
 #
 import os
 import pygame
@@ -15,6 +46,7 @@ from minimax import minimax_algorithm
 FPS = 60 # <----  could put this in constants folder but the constants file is specific to the game
 
 SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))  #create the screen
+
 pygame.display.set_caption('Othello') 
 
 
@@ -28,7 +60,6 @@ def handleClick(board, row, column, color, valid_moves): ## returns a boolean va
         board.findFlanker(row, column, color)
         return True
     elif valid_moves == []:
-        print("no moves nigger but im not going to skip")
         return []
     elif valid_moves:
         return  0 # holds the can_move
@@ -80,7 +111,9 @@ def main():
     clock = pygame.time.Clock() # makes the game run at maximum a machine can handle 
     board = Board()
     
-    ai_enable = False
+    AB_PRUNING = False
+    DEPTH = 2
+    MINIMAX = False
     current_color = BLACK
     running = True
     
@@ -113,7 +146,7 @@ def main():
                             print("No Availible Turns for player. Switching Turns")
                         printScores(board) # Display the score to the screen
                     
-                elif not ai_enable and current_color == WHITE:
+                elif not MINIMAX and current_color == WHITE:
                     valid_moves = getValidMoves(board, WHITE)
                     if board.pieceInSpot(row, column) != True:
                         can_move = handleClick(board, row, column, WHITE, valid_moves)
@@ -127,10 +160,16 @@ def main():
                             print("No Availible moves. Switching Turns")
                         printScores(board) # Display the score to the screen
                     
-                elif ai_enable and current_color == WHITE:
+                elif MINIMAX and current_color == WHITE:
                     ##TODO: implement minimax
                     board.curColor = WHITE
-                    value, best_move = minimax_algorithm.minimax(board, 3, True, float('-inf'), float('inf'))
+                    if AB_PRUNING:
+                        value, best_move = minimax_algorithm.minimax_with_alpha_beta(board, DEPTH, True, float('-inf'), float('inf'))
+                        print(best_move)
+                    else:
+                        value, best_move = minimax_algorithm.minimax(board, DEPTH, True)
+                        print(best_move)
+                        
                     if best_move:
                         r, c = best_move
                         board.placePiece(r, c, WHITE)
@@ -144,16 +183,24 @@ def main():
 
                     
             ### ------------------- keyboard input for AI --------------------------
-            elif event.type == pygame.KEYDOWN and not ai_enable:
+            elif event.type == pygame.KEYDOWN and not MINIMAX:
                 if event.key == pygame.K_SPACE:
-                    ai_enable = True
+                    MINIMAX = True
                     print("AI ON")
             
-            elif event.type == pygame.KEYDOWN and ai_enable:
+            elif event.type == pygame.KEYDOWN and MINIMAX:
                 if event.key == pygame.K_SPACE:
-                    ai_enable = False
+                    MINIMAX = False
+                    AB_PRUNING = False
                     print("AI OFF")
+                
+                if event.key == pygame.K_0 and not AB_PRUNING:
+                    AB_PRUNING = True
+                    print("ALPHA-BETA PRUNING ON")
                     
+                if event.key == pygame.K_RIGHT and AB_PRUNING:
+                    AB_PRUNING = False
+                    print("ALPHA-BETA PRUNING OFF")
 
         Bscore = board.black 
         Wscore = board.white
@@ -167,12 +214,14 @@ def main():
         )
         white_score = font.render( f"WHITE SCORE: {Wscore}",True,(0,0,200))
         black_score = font.render( f"BLACK SCORE: {Bscore}",True,(0,0,200))
-        ai_on_display = font.render( f"MINIMAX: {ai_enable}",True,(0,200,0))
+        ai_on_display = font.render( f"MINIMAX: {MINIMAX}",True,(0,200,0))
+        abp_on_display = font.render(f"AB-PRUNING: {AB_PRUNING}", True, (0,200,0))
         
         SCREEN.blit(turn_text, (20, 20)) #display the turn
         SCREEN.blit(black_score, (20,750))
         SCREEN.blit(white_score, (550, 750))
-        SCREEN.blit(ai_on_display, (550, 20))
+        SCREEN.blit(ai_on_display, (535, 20))
+        SCREEN.blit(abp_on_display, (535, 60))
         
         pygame.display.update() ## update the screen after each loop
         
