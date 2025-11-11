@@ -1,5 +1,5 @@
 import pygame
-from .constants import GREY, SQUARE_SIZE, BLACK, WHITE
+from .constants import GREY, SQUARE_SIZE, BLACK, WHITE, BLUE
 
 class Piece:
     
@@ -17,12 +17,12 @@ class Piece:
     def calculatePosition(self):
         self.x = SQUARE_SIZE * self.column + SQUARE_SIZE // 2 
         self.y = SQUARE_SIZE * self.row + SQUARE_SIZE // 2
-        
+    
     def draw(self, screen): # draws itself on the screen
         radius = SQUARE_SIZE // 2 - self.PADDING
         pygame.draw.circle(screen, GREY,(self.x, self.y), radius + self.OUTLINE)
         pygame.draw.circle(screen, self.color,(self.x, self.y), radius)
-
+    
     def changeColor(self): # a piece can change color if it is outflanked
         if self.color == BLACK:
             self.color = WHITE

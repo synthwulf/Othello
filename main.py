@@ -42,6 +42,7 @@ import pygame
 from othello.constants import SCREEN_HEIGHT, SCREEN_WIDTH, BLACK, WHITE, SQUARE_SIZE #import the constants defined in othello/constants.py
 from othello.board import Board
 from minimax import minimax_algorithm
+from time import *
 
 FPS = 60 # <----  could put this in constants folder but the constants file is specific to the game
 
@@ -52,7 +53,7 @@ pygame.display.set_caption('Othello')
 
 #### -------------------- Helper Functions -------------------------
 
-def handleClick(board, row, column, color, valid_moves): ## returns a boolean value telling us wether or not there are valid moves. 
+def handleClick(board, row, column, color, valid_moves): ## places the piece on the board if the specified row, coloumn pair is in valid_moves
                                                                 # 0 if there are valid moves but none were chosen
     print(valid_moves)
     if (row, column) in valid_moves: ## if the (row, column) is in the list then the piece can be played
@@ -64,7 +65,8 @@ def handleClick(board, row, column, color, valid_moves): ## returns a boolean va
     elif valid_moves:
         return  0 # holds the can_move
     #TODO: if there are no valid moves for black then change the turn. Only should be True if valid_moves == []
-def printScores(board): ## debugging
+    
+def printScores(board): ## prints the score to the screen by grabbnig the result the winner() in Board
     board.updateScore()
     if board.winner() != False:
         if board.winner() != 0:
@@ -80,9 +82,7 @@ def printScores(board): ## debugging
     else:
         print(f"Black Score: {board.black} White Score: {board.white}")
     
-def switchTurn(current_color): # changes turns
-    
-    # os.system('cls')
+def switchTurn(current_color): # changes turns based on the color provided while displaying the current players turn
     
     curTurn =  WHITE if current_color == BLACK else BLACK
     
@@ -110,47 +110,57 @@ def main():
     pygame.init()
     clock = pygame.time.Clock() # makes the game run at maximum a machine can handle 
     board = Board()
+    minimax = minimax_algorithm.Minimax()
     
     AB_PRUNING = False
     DEPTH = 2
     MINIMAX = False
+    
     current_color = BLACK
     running = True
     
+    #type of player
+    black_player = True
+    white_player = True
+    
     while running:
-        clock.tick(FPS)
         
         for event in pygame.event.get():#check for any user inputs
             
             if event.type == pygame.QUIT: # quit game
                 running = False
             
-            if event.type == pygame.MOUSEBUTTONDOWN: # place the piece down according to whose turn it is
+            # wait for user input
+            if event.type == pygame.MOUSEBUTTONDOWN: 
                 
                 x, y = pygame.mouse.get_pos()
                 
                 row = y // SQUARE_SIZE     # normalize the row
                 column =  x // SQUARE_SIZE # normalize the column
                 
-                if current_color == BLACK:
+                
+                # human player playing black
+                if not MINIMAX or (current_color == BLACK and black_player == True):
                     valid_moves = getValidMoves(board, BLACK)
+                    # board.highlightSquares(SCREEN, valid_moves)
                     if board.pieceInSpot(row, column) != True:
                         can_move = handleClick(board, row, column, BLACK, valid_moves)
-                        if can_move:
+                        if can_move: ## if the player has availible moves
                             current_color = switchTurn(BLACK) # change turns
-                        elif can_move == 0:
+                        elif can_move == 0: ## if the player has availible moves but did not place in a valid spot then print a error
                             print("Invalid Spot")
                             continue
                         elif can_move == []:  ## if there are no valid moves in the first place for black then just skip turn
                             current_color = switchTurn(BLACK) # change turns anyway
                             print("No Availible Turns for player. Switching Turns")
                         printScores(board) # Display the score to the screen
-                    
-                elif not MINIMAX and current_color == WHITE:
+                
+                # human player playing white    
+                elif not MINIMAX or (current_color == WHITE and white_player == True):
                     valid_moves = getValidMoves(board, WHITE)
                     if board.pieceInSpot(row, column) != True:
                         can_move = handleClick(board, row, column, WHITE, valid_moves)
-                        if can_move:
+                        if can_move: 
                             current_color = switchTurn(WHITE) # change turns
                         elif can_move == 0:
                             print("Invalid Spot")
@@ -159,16 +169,48 @@ def main():
                             current_color = switchTurn(WHITE) # change turns anyway
                             print("No Availible moves. Switching Turns")
                         printScores(board) # Display the score to the screen
+                
+                # AI playing black
+                elif MINIMAX and current_color == BLACK and black_player == False:
                     
-                elif MINIMAX and current_color == WHITE:
-                    ##TODO: implement minimax
+                    board.curColor = BLACK 
+                    if AB_PRUNING:
+                        value, best_move = minimax.minimax_with_alpha_beta(board, DEPTH, False, float('-inf'), float('inf'))
+                        print(best_move)
+                        print("Number of States Examined: " + str(minimax.recordedGameStates))
+                        minimax.resetRecordings()
+                    else:
+                        value, best_move = minimax.minimax(board, DEPTH, False)
+                        print(best_move)
+                        print("Number of States Examined: " + str(minimax.recordedGameStates))
+                        minimax.resetRecordings()
+                        
+                    if best_move:
+                        r, c = best_move
+                        board.placePiece(r, c, BLACK)
+                        board.findFlanker(r, c,BLACK)
+                        current_color = switchTurn(BLACK)
+                        print(f"placed a {(r, c)} (eval={value})")
+                        
+                    else:
+                        current_color = switchTurn(BLACK)
+                        print("AI has no valid moves. Switching turns.")
+                    printScores(board)
+                
+                # AI playing white    
+                elif MINIMAX and current_color == WHITE and white_player == False:
+                    
                     board.curColor = WHITE
                     if AB_PRUNING:
-                        value, best_move = minimax_algorithm.minimax_with_alpha_beta(board, DEPTH, True, float('-inf'), float('inf'))
+                        value, best_move = minimax.minimax_with_alpha_beta(board, DEPTH, True, float('-inf'), float('inf'))
                         print(best_move)
+                        print("Number of States Examined: " + str(minimax.recordedGameStates))
+                        minimax.resetRecordings()
                     else:
-                        value, best_move = minimax_algorithm.minimax(board, DEPTH, True)
+                        value, best_move = minimax.minimax(board, DEPTH, True)
                         print(best_move)
+                        print("Number of States Examined: " + str(minimax.recordedGameStates))
+                        minimax.resetRecordings()
                         
                     if best_move:
                         r, c = best_move
@@ -176,18 +218,19 @@ def main():
                         board.findFlanker(r, c,WHITE)
                         current_color = switchTurn(WHITE)
                         print(f"placed a {(r, c)} (eval={value})")
+                        
                     else:
                         current_color = switchTurn(WHITE)
                         print("AI has no valid moves. Switching turns.")
                     printScores(board)
-
+                    
                     
             ### ------------------- keyboard input for AI --------------------------
             elif event.type == pygame.KEYDOWN and not MINIMAX:
                 if event.key == pygame.K_SPACE:
                     MINIMAX = True
                     print("AI ON")
-            
+                
             elif event.type == pygame.KEYDOWN and MINIMAX:
                 if event.key == pygame.K_SPACE:
                     MINIMAX = False
@@ -198,17 +241,35 @@ def main():
                     AB_PRUNING = True
                     print("ALPHA-BETA PRUNING ON")
                     
-                if event.key == pygame.K_RIGHT and AB_PRUNING:
+                elif event.key == pygame.K_0 and AB_PRUNING:
                     AB_PRUNING = False
                     print("ALPHA-BETA PRUNING OFF")
+                    
+                
+            # independent key events
+            if event.type == pygame.KEYDOWN:
+                
+                #turn human player playing black off
+                if event.key == pygame.K_RIGHT:
+                    black_player = False if black_player == True else True
+                
+                #turn human player playing white off
+                if event.key == pygame.K_LEFT:
+                    white_player = False if white_player == True else True
+                    
+                    
+                    
+            
+
+#### ------------------ drawing ---------------------------------------
 
         Bscore = board.black 
         Wscore = board.white
         
         board.draw(SCREEN)
         font = pygame.font.SysFont(None, 40)
+        font_2 = pygame.font.SysFont(None, 30)
         
-
         turn_text = font.render(
         f"{'Black' if current_color == BLACK else 'White'}'s Turn ", True, (0, 100, 255)
         )
@@ -217,15 +278,22 @@ def main():
         ai_on_display = font.render( f"MINIMAX: {MINIMAX}",True,(0,200,0))
         abp_on_display = font.render(f"AB-PRUNING: {AB_PRUNING}", True, (0,200,0))
         
+        playerB = font_2.render(f"BLACK PLAYER: {"Human" if black_player == True else "AI"}", True, (200,0,0) )
+        playerW = font_2.render(f"WHITE PLAYER: {"Human" if white_player == True else "AI"}", True, (200,0,0))
+
+        
         SCREEN.blit(turn_text, (20, 20)) #display the turn
         SCREEN.blit(black_score, (20,750))
         SCREEN.blit(white_score, (550, 750))
         SCREEN.blit(ai_on_display, (535, 20))
         SCREEN.blit(abp_on_display, (535, 60))
         
+        SCREEN.blit(playerB, (257, 20))
+        SCREEN.blit(playerW, (257, 50))
+
+        
         pygame.display.update() ## update the screen after each loop
         
-
         
     pygame.quit() # gets rid of the window
         

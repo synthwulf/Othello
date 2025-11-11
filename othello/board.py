@@ -23,6 +23,7 @@ class Board:
         self.white = 2 # value starts at 2 to follow the inital board state
         self.curColor = BLACK
         self.last_move = None
+        self.NumberOfStates = 0
         self.createBoard()
     
     def drawSquares(self, screen):
@@ -50,7 +51,7 @@ class Board:
     def pieceInSpot(self, row, column): # checks to see if there is a piece in a spot the player or AI is trying to play in.
         return isinstance(self.board[row][column], Piece)
     
-    def draw(self, screen):
+    def draw(self, screen): #draws pieces onto the board
         self.drawSquares(screen)
         for row in range(ROWS):
             for column in range(COLUMNS):
@@ -177,7 +178,7 @@ class Board:
         
         return final_score
     
-    def get_piece_score(self): ## the amount of availible moves by 
+    def get_piece_score(self): # score calculated by weight at that spot + piece 
         white_weighted_score = 0
         black_weighted_score = 0
         for r in range(ROWS):
@@ -223,3 +224,24 @@ class Board:
                         self.black += 1
                     else: 
                         self.white += 1
+                    
+    def calculateHighlightposition (self, row, column):
+        r = SQUARE_SIZE * column + SQUARE_SIZE // 2 
+        c = SQUARE_SIZE * row+ SQUARE_SIZE // 2
+        return r, c
+            
+                        
+    def highlightSquares(self, screen, valid_moves): ## refers to the cvalid list 
+        radius = SQUARE_SIZE // 2 
+        
+        for spot in valid_moves:
+            r, c = self.calculateHighlightposition(spot[0], spot[1])
+            pygame.draw.circle(screen, BLUE,(r, c), radius)
+            pygame.draw.circle(screen, BLUE,(r, c), radius)
+        
+        
+    def clearStoredStates(self):
+        self.NumberOfStates = 0
+    
+    def storeStates(self, number):
+        self.NumberOfStates += number
